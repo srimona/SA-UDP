@@ -33,14 +33,9 @@ This prevents unnecessary retransmissions over weak links where packets are simp
 ## System Architecture & Modules
 
 The repository is structured into four core engineering modules:
-
-+-----------------------------------------------------------------------------------+
-|                                  SA-UDP System Flow                              |
-|                                                                                   |
-|  [ File Data ] ──► [ Module 1: Socket Engine ] ◄──► [ Module 3: Adaptive ARQ ]    |
-|                                                              ▲                    |
-|                                                              │ (SNR Telemetry)    |
-|                                                    [ Module 2: Link Monitor ]     |
-|                                                                                   |
-|  [ Module 4: Benchmarking ] ──► Evaluates Throughput, Retransmissions & Latency  |
-+-----------------------------------------------------------------------------------+
+| Module | Component Name | Primary Function |
+| :--- | :--- | :--- |
+| **Module 1** | `Socket & Protocol Engine` | Binary packet framing, sequence tracking, CRC32 checksums, and SACK bitmasks[cite: 5]. |
+| **Module 2** | `Telemetry & Link Monitor` | Tracks live wireless metrics (SNR/RSSI), moving averages (`SNR_avg`), and `Delta SNR`[cite: 5]. |
+| **Module 3** | `Adaptive ARQ Controller` | Noise vs. Congestion state machine and dynamic `RTO_pred` calculations[cite: 5]. |
+| **Module 4** | `Channel Emulator & Evaluator` | Benchmark engine testing throughput, retransmissions, and latency against TCP[cite: 5]. |
