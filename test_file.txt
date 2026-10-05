@@ -1,0 +1,14 @@
+SA-UDP MODULE 1: SOCKET & PROTOCOL ENGINE TEST DATA
+
+Protocol: Signal-Aware UDP (SA-UDP)
+Test Module: Binary Framing, Sequence Numbering, CRC32 Checksum, and SACK Generation.
+
+This sample payload verifies that the SA-UDP sender engine correctly breaks down 
+raw data streams into 1024-byte payload chunks, attaches custom binary headers, 
+calculates CRC32 checksums, and transmits frames over raw UDP sockets to the receiver.
+
+Line 1: Verification of sequence tracking across multiple packets.
+Line 2: Testing RTT calculation timestamps embedded in headers.
+Line 3: Validating receiver-side frame reassembly and checksum integrity.
+Line 4: Testing Selective Acknowledgement (SACK) feedback frame generation.
+Line 5: End of test data payload.
