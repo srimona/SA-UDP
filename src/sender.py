@@ -1,41 +1,40 @@
 import socket
 import time
-from packet import SAUDPPacket
+from src.packet import pack_packet, unpack_sack
+from src.telemetry import LinkMonitor, SignalAwareRTO
 
-def send_file(file_path, receiver_host="127.0.0.1", receiver_port=9999):
+def send_file(filename="test_file.txt", host="127.0.0.1", port=9999):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.settimeout(2.0)  # Initial socket timeout for SACK responses
-    dest_addr = (receiver_host, receiver_port)
-    
-    CHUNK_SIZE = 1024  # 1 KB per payload chunk
-    seq_num = 1
+    sock.settimeout(2.0)
 
-    try:
-        with open(file_path, "rb") as f:
-            while True:
-                chunk = f.read(CHUNK_SIZE)
-                if not chunk:
-                    break
-                
-                # Pack binary frame and send
-                pkt_bytes = SAUDPPacket.pack_data(seq_num, chunk)
-                sock.sendto(pkt_bytes, dest_addr)
+    rto_calculator = SignalAwareRTO(initial_rto=1.0)
+    
+    with open(filename, "rb") as f:
+        seq_num = 1
+        while chunk := f.read(1024):
+            packet = pack_packet(seq_num, chunk)
+            sent = False
+            while not sent:
+                sock.sendto(packet, (host, port))
                 print(f"[->] Sent Packet #{seq_num}")
-                
-                # Listen for SACK acknowledgement
+
                 try:
                     ack_data, _ = sock.recvfrom(1024)
-                    print(f"[<-] SACK received for Packet #{seq_num}")
+                    ack_seq, orig_ts, telemetry_bytes = unpack_sack(ack_data)
+
+                    if ack_seq == seq_num:
+                        measured_rtt = time.time() - orig_ts
+                        snr, rssi, loss_rate = LinkMonitor.unpack_telemetry(telemetry_bytes)
+                        new_rto = rto_calculator.update_rto(measured_rtt, snr)
+
+                        print(f"[<-] SACK #{ack_seq} | RTT: {measured_rtt*1000:.2f}ms | Telemetry SNR: {snr:.1f}dB | New Adaptive RTO: {new_rto:.3f}s")
+                        sent = True
                 except socket.timeout:
-                    print(f"[!] Timeout on Packet #{seq_num} (Will be handled by Module 3 ARQ)")
+                    print(f"[!] Timeout for Packet #{seq_num}, retransmitting...")
 
-                seq_num += 1
-                time.sleep(0.01)
+            seq_num += 1
 
-        print("[+] File transmission complete.")
-
-    except FileNotFoundError:
-        print(f"[!] Error: File '{file_path}' not found. Create a dummy file to test.")
+    print("\n[+] Module 2 File Transmission & Telemetry Loop Complete!")
 
 if __name__ == "__main__":
-    send_file("test_file.txt")
+    send_file()
