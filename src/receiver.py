@@ -1,33 +1,28 @@
 import socket
-from packet import SAUDPPacket
+from src.packet import unpack_packet, pack_sack
+from src.telemetry import LinkMonitor
 
 def start_receiver(host="127.0.0.1", port=9999):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((host, port))
-    print(f"[+] SA-UDP Module 1 Receiver listening on {host}:{port}...")
+    print(f"[+] SA-UDP Module 2 Receiver listening on {host}:{port}...")
 
-    received_chunks = {}
+    monitor = LinkMonitor(base_snr=25.0, base_rssi=-65.0)
 
     while True:
         data, addr = sock.recvfrom(2048)
-        try:
-            pkt = SAUDPPacket.unpack(data)
-            
-            # Check for corrupted payload
-            if pkt["corrupt"]:
-                print(f"[!] Packet #{pkt['seq_num']} checksum failed. Dropping.")
-                continue
+        (seq_num, original_ts, payload), is_valid = unpack_packet(data)
 
-            if pkt["type"] == SAUDPPacket.TYPE_DATA:
-                print(f"[+] Received Packet #{pkt['seq_num']} ({len(pkt['payload'])} bytes)")
-                received_chunks[pkt["seq_num"]] = pkt["payload"]
+        if is_valid:
+            monitor.packets_received += 1
+            telemetry_bytes, snr, rssi, loss_rate = monitor.pack_telemetry()
+            print(f"[+] Recv Pkt #{seq_num} | SNR: {snr:.1f} dB | RSSI: {rssi:.1f} dBm | Loss: {loss_rate:.2f}")
 
-                # Send SACK feedback frame acknowledging the sequence number
-                sack_frame = SAUDPPacket.pack_sack(cum_ack=pkt["seq_num"], sack_bitmask=0)
-                sock.sendto(sack_frame, addr)
-
-        except Exception as e:
-            print("[!] Error processing frame:", e)
+            sack_packet = pack_sack(seq_num, original_ts, telemetry_bytes)
+            sock.sendto(sack_packet, addr)
+        else:
+            monitor.packets_lost += 1
+            print(f"[!] CRC Error / Corrupted Packet received from {addr}")
 
 if __name__ == "__main__":
     start_receiver()
