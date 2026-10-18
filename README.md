@@ -41,4 +41,4 @@ The repository is structured into four core engineering modules:
 | **Module 4** | `Channel Emulator & Evaluator` | Benchmark engine testing throughput, retransmissions, and latency against TCP[cite: 5]. |
 
 ## live demo
-access the interactive protocol simulator here: [SA-UDP live dashboard](https://sa-udp-dgwj2rqtojvcbaszgrv242.streamlit.app/)
+Access the interactive protocol simulator here: [SA-UDP live dashboard](https://sa-udp-dgwj2rqtojvcbaszgrv242.streamlit.app/)
