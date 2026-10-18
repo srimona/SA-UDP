@@ -39,3 +39,6 @@ The repository is structured into four core engineering modules:
 | **Module 2** | `Telemetry & Link Monitor` | Tracks live wireless metrics (SNR/RSSI), moving averages (`SNR_avg`), and `Delta SNR`[cite: 5]. |
 | **Module 3** | `Adaptive ARQ Controller` | Noise vs. Congestion state machine and dynamic `RTO_pred` calculations[cite: 5]. |
 | **Module 4** | `Channel Emulator & Evaluator` | Benchmark engine testing throughput, retransmissions, and latency against TCP[cite: 5]. |
+
+## live demo
+access the interactive protocol simulator here: [SA-UDP live dashboard](https://sa-udp-dgwj2rqtojvcbaszgrv242.streamlit.app/)
