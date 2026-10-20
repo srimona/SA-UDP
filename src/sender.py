@@ -18,7 +18,22 @@ def run_sender():
     rto_engine = SignalAwareRTO(initial_rto=0.200)
     congestion_control = SignalAwareCongestionControl()
     
-    payload_data = [b"SA-UDP Packet Payload Data Chunk " + str(i).encode() for i in range(1, 6)]
+    # Prompt the user for a dynamic packet count at runtime
+    try:
+      user_input = input(
+          "Enter number of packets to transmit (or press Enter for default"
+          " 10): "
+      )
+      num_packets = int(user_input) if user_input.strip() else 10
+    except ValueError:
+      print("[!] Invalid input entered. Falling back to default: 10 packets.")
+      num_packets = 10
+
+    # Dynamically generate the payload chunks based on user input
+    payload_data = [
+        b"SA-UDP Packet Payload Data Chunk " + str(i).encode()
+        for i in range(1, num_packets + 1)
+    ]
     
     print("[+] SA-UDP Full Protocol Sender Active (Modules 1-4 Complete)...")
     print(f"[+] Transmitting {len(payload_data)} chunks to {receiver_address[0]}:{receiver_address[1]}...\n")
